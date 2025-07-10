@@ -186,6 +186,9 @@ where
                 // Both are active, need to compare keys
                 (Some(&(local_key, local_operation)), Some((db_key, _db_value))) => {
                     return if local_key < db_key {
+                        // not sure on this
+                        counter!("schemadb_cache_misses", "cf_name" => S::COLUMN_FAMILY_NAME)
+                            .increment(1);
                         self.db_iter.next()
                     } else {
                         // Local is preferable, as it is the latest
