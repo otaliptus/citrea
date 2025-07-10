@@ -21,6 +21,7 @@ use citrea_primitives::forks::fork_from_block_number;
 use citrea_primitives::merkle::{compute_tx_hashes, compute_tx_merkle_root};
 use citrea_primitives::types::L2BlockHash;
 use citrea_stf::runtime::{CitreaRuntime, DefaultContext};
+use metrics::{gauge, histogram};
 use parking_lot::Mutex;
 use reth_execution_types::ChangedAccount;
 use reth_provider::{AccountReader, BlockReaderIdExt};
@@ -354,6 +355,12 @@ where
                 // we can include the transaction in the block
                 working_set_to_discard = working_set.checkpoint().to_revertable();
                 all_txs.push(rlp_tx);
+
+                histogram!("sequencer_dry_run_tx_time").record(
+                    Instant::now()
+                        .saturating_duration_since(start_tx)
+                        .as_millis_f64(),
+                );
             }
             SEQUENCER_METRICS.dry_run_execution.record(
                 Instant::now()
@@ -486,6 +493,7 @@ where
             )
             .await?;
 
+        let block_production_start = Instant::now();
         let prestate = self.storage_manager.create_storage_for_next_l2_height();
         assert_eq!(
             prestate.version(),
@@ -559,6 +567,11 @@ where
         );
 
         let state_diff = self.save_l2_block(l2_block, l2_block_result, tx_hashes, blobs)?;
+        histogram!(
+            "sequencer_block_production_time",
+            "block_number" => l2_height.to_string()
+        )
+        .record(block_production_start.elapsed().as_millis() as f64);
 
         self.ledger_db
             .set_state_diff(L2BlockNumber(l2_height), &state_diff)?;

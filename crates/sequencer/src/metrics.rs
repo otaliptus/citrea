@@ -30,6 +30,16 @@ pub struct SequencerMetrics {
     /// Current L1 block number
     #[metric(describe = "The height of the current L1 block put into the Bitcoin Light Client")]
     pub current_l1_block: Gauge,
+    /// The number of transactions that are dry run in the current block
+    #[metric(
+        describe = "The time in milliseconds it took to run transactions in the current block, this does not include the time to dry run the transactions"
+    )]
+    pub block_production_time: Histogram,
+    /// Histogram tracking the time taken for dry run a transaction
+    #[metric(
+        describe = "The time taken to dry run a transaction in the current block in milliseconds"
+    )]
+    pub dry_run_tx_time: Histogram,
 }
 
 /// Sequencer metrics
