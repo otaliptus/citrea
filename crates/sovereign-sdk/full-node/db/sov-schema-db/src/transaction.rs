@@ -164,11 +164,7 @@ where
 
             match (local_cache_peeked, db_peeked) {
                 // Both iterators exhausted
-                (None, None) => {
-                    counter!("schemadb_cache_misses", "cf_name" => S::COLUMN_FAMILY_NAME)
-                        .increment(1);
-                    break;
-                }
+                (None, None) => break,
                 // Parent exhausted (just like me on friday)
                 (Some(&(key, operation)), None) => {
                     self.local_cache_iter.next();
@@ -182,7 +178,8 @@ where
                 }
                 // Local exhausted
                 (None, Some((_key, _value))) => {
-                    counter!("schemadb_cache_hits", "cf_name" => S::COLUMN_FAMILY_NAME)
+                    // not sure on this
+                    counter!("schemadb_cache_misses", "cf_name" => S::COLUMN_FAMILY_NAME)
                         .increment(1);
                     return self.db_iter.next();
                 }
