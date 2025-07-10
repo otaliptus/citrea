@@ -2475,6 +2475,8 @@ dependencies = [
  "jsonrpsee",
  "k256",
  "lazy_static",
+ "metrics 0.23.0",
+ "metrics-derive",
  "once_cell",
  "rand 0.8.5",
  "rayon",

@@ -3,6 +3,8 @@ use alloy_consensus::{proofs, Header as AlloyHeader, TxReceipt};
 use alloy_eips::eip7685::EMPTY_REQUESTS_HASH;
 use alloy_primitives::{Bloom, Bytes, B256, B64, U256};
 use citrea_primitives::basefee::calculate_next_block_base_fee;
+#[cfg(feature = "native")]
+use metrics::gauge;
 use revm::context::BlockEnv;
 use revm::context_interface::block::BlobExcessGasAndPrice;
 use revm::primitives::hardfork::SpecId;
@@ -252,6 +254,16 @@ impl<C: sov_modules_api::Context> Evm<C> {
             let sealed_block = block.seal();
 
             self.blocks.push(&sealed_block, accessory_working_set);
+
+            #[cfg(feature = "native")]
+            {
+                // Update the metrics with the new block count
+                gauge!(
+                    "evm_gas_usage","block_number" => sealed_block.header.number.to_string(),
+                )
+                .set(sealed_block.header.number as f64);
+            }
+
             self.block_hashes.set(
                 &sealed_block.header.hash(),
                 &sealed_block.header.number,
