@@ -21,6 +21,9 @@ pub struct SequencerMetrics {
     /// Histogram tracking commitment sending execution time
     #[metric(describe = "The duration of sending a sequencer commitment")]
     pub send_commitment_execution: Histogram,
+    /// Histogram tracking the entire process time of commitment
+    #[metric(describe = "The total time taken to create a commitment and send it to DA")]
+    pub commitment_entire_process_time: Histogram,
     /// Current count of blocks in the commitment
     #[metric(describe = "The number of blocks included in a sequencer commitment")]
     pub commitment_blocks_count: Gauge,

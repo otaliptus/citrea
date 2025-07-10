@@ -7,6 +7,7 @@ use citrea_common::utils::get_tangerine_activation_height_non_zero;
 use citrea_evm::{get_last_l1_height_in_light_client, Evm};
 use citrea_primitives::types::L2BlockHash;
 use citrea_stf::runtime::DefaultContext;
+use metrics::histogram;
 use reth_tasks::shutdown::GracefulShutdown;
 use rs_merkle::algorithms::Sha256;
 use rs_merkle::MerkleTree;
@@ -108,6 +109,7 @@ where
         check_new_block_tick.tick().await;
 
         loop {
+            let mut start_commitment_processing = Instant::now();
             select! {
                 biased;
                 _ = &mut shutdown_signal => {
@@ -124,6 +126,8 @@ where
                                 if should_halt {
                                     warn!("CommitmentService: Commitments halted via RPC");
                                 } else {
+                                    // Reset the start time for the next commitment processing
+                                    start_commitment_processing = Instant::now();
                                     info!("CommitmentService: Commitments resumed via RPC");
                                 }
                             }
@@ -168,6 +172,18 @@ where
                                 // continue functioning correctly. We just need to resubmit the failed commitment to DA.
                                 error!("Failed to submit commitment: {:?}", e);
                             }
+                            histogram!(
+                                "sequencer_commitment_entire_process_time",
+                                "index" => index.to_string(),
+                                "l2_start_height" => commitment_range.start().0.to_string(),
+                                "l2_end_height" => commitment_range.end().0.to_string()
+                            ).record(
+                                start_commitment_processing
+                                    .elapsed()
+                                    .as_millis_f64(),
+                            );
+                            // Reset the start time for the next commitment processing
+                            start_commitment_processing = Instant::now();
                         };
 
                         last_l2_height = current_l2_height;
