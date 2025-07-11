@@ -1044,6 +1044,16 @@ fn generate_cumulative_witness<Da: DaService, DB: BatchProverLedgerOps>(
                 cache_prune_l2_heights.push(l2_height);
             }
 
+            let state_log_cache_size = state_log.estimated_cache_size();
+            let offchain_log_cache_size = offchain_log.estimated_cache_size();
+
+            BATCH_PROVER_METRICS
+                .state_log_cache_size
+                .record(state_log_cache_size as f64);
+            BATCH_PROVER_METRICS
+                .offchain_log_cache_size
+                .record(offchain_log_cache_size as f64);
+
             cumulative_state_log = Some(state_log);
             cumulative_offchain_log = Some(offchain_log);
 

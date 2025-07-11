@@ -34,6 +34,14 @@ pub struct BatchProverMetrics {
     /// Histogram tracking the time taken to generate cumulative witness
     #[metric(describe = "The cumulative witness generation time for a batch proof")]
     pub cumulative_witness_generation_time: Histogram,
+
+    /// State log cache size in witness generation
+    #[metric(describe = "The size of the state log cache in witness generation")]
+    pub state_log_cache_size: Histogram,
+
+    /// Offchain log cache size in witness generation
+    #[metric(describe = "The size of the offchain log cache in witness generation")]
+    pub offchain_log_cache_size: Histogram,
 }
 
 /// Batch prover metrics
