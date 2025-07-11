@@ -30,6 +30,10 @@ pub struct FullnodeMetrics {
     /// Histogram tracking the time taken to process sequencer commitments
     #[metric(describe = "The duration of processing a sequencer commitment")]
     pub sequencer_commitment_processing_time: Histogram,
+
+    /// Histogram tracking the time taken to process batch proofs
+    #[metric(describe = "The duration of processing a batch proof")]
+    pub batch_proof_processing_time: Histogram,
 }
 
 /// Global instance of fullnode metrics
