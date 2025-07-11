@@ -5,6 +5,7 @@ use alloy_primitives::utils::parse_ether;
 use anyhow::Context;
 use boundless_market::alloy::primitives::U256;
 use boundless_market::client::{Client, ClientBuilder, ClientError};
+use boundless_market::contracts::boundless_market::MarketError;
 use boundless_market::contracts::{Offer, Predicate, Requirements};
 use boundless_market::request_builder::RequestParams;
 use boundless_market::GuestEnv;
@@ -297,9 +298,15 @@ impl BoundlessProver {
                     }
                     Err(e) => {
                         tracing::error!(
-                    "Failed to handle Boundless proving session job: {} | Boundless request id: {} | err={}",
-                    job_id, request_id, e
-                );
+                            "Failed to handle Boundless proving session job: {} | Boundless request id: {} | err={}",
+                            job_id, request_id, e
+                        );
+                        if !matches!(e, ClientError::MarketError(MarketError::RequestHasExpired(_))) {
+                            // Only resubmit if the request has expired.
+                            // Other possible errors include network errors, or
+                            // MarketError::ProofNotFound, which we should not get?
+                            continue;
+                        }
                         match this.handle_resubmit_on_failed_request(
                             job_id,
                             &mut request_id,
@@ -380,22 +387,50 @@ impl BoundlessProver {
 
         // TODO: https://github.com/chainwayxyz/citrea/issues/2417
         // Define new request with updated parameters
-        let new_min_price_per_mcycle = failed_order
-            .request
-            .offer
-            .minPrice
-            .div_ceil(U256::from(mcycles_count))
-            .wrapping_mul(U256::from(15))
-            .div_ceil(U256::from(10));
+        let (new_min_price_per_mcycle, new_max_price_per_mcycle, new_lock_timeout) = {
+            let is_locked = match self.client.boundless_market.is_locked(U256::from_str(request_id).unwrap()).await{
+                Ok(locked) => locked,
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to check if request is locked for job: {} request_id: {} | err={}",
+                        job_id,
+                        request_id,
+                        e
+                    );
+                    return Ok(());
+                }
+            };
+            // Get old parameters from the failed order
+            let min_price_per_mcycle = failed_order
+                .request
+                .offer
+                .minPrice
+                .div_ceil(U256::from(mcycles_count));
+            let max_price_per_mcycle = failed_order
+                    .request
+                    .offer
+                    .maxPrice
+                    .div_ceil(U256::from(mcycles_count));
+            let lock_timeout = failed_order.request.offer.lockTimeout;
 
-        let new_max_price_per_mcycle = failed_order
-            .request
-            .offer
-            .maxPrice
-            .div_ceil(U256::from(mcycles_count))
-            .wrapping_mul(U256::from(2));
+            if is_locked {
+                // If locked, that means a prover worked on the request but failed to deliver it on time.
+                // Increase the lock timeout.
+                let lock_timeout = lock_timeout.saturating_mul(2);
+                (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
 
-        let new_lock_timeout = failed_order.request.offer.lockTimeout.wrapping_mul(2);
+            } else {
+                // If not locked, that means the request was never taken by a prover.
+                // Increase the min and max price per mcycle.
+                let min_price_per_mcycle = min_price_per_mcycle
+                    .saturating_mul(U256::from(15))
+                    .div_ceil(U256::from(10));
+                let max_price_per_mcycle = max_price_per_mcycle
+                    .saturating_mul(U256::from(2));
+                (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
+            }
+        };
+       
 
         let new_request = self.build_proof_request(
             image_id,
@@ -417,7 +452,6 @@ impl BoundlessProver {
             mcycles_count,
             new_lock_timeout as u64,
         );
-        // Update request_id and request_expiry for the next iteration
 
         // Resubmit the request with updated parameters
         let Ok((new_req_id, new_exp_time)) = self
@@ -432,6 +466,7 @@ impl BoundlessProver {
             return Ok(());
         };
 
+        // Update request_id and request_expiry for the next iteration
         *request_id = new_req_id;
         *request_expiry = new_exp_time;
 
