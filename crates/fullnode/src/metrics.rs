@@ -46,6 +46,10 @@ pub struct FullnodeMetrics {
     /// Counter for the highest proven l2 height
     #[metric(describe = "The highest proven l2 height")]
     pub highest_proven_l2_height: Counter,
+
+    /// Histogram for the size of l2 blocks processed
+    #[metric(describe = "The size of l2 blocks processed in bytes")]
+    pub l2_block_size: Histogram,
 }
 
 /// Global instance of fullnode metrics
