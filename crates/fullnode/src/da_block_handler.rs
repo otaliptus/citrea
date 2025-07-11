@@ -501,6 +501,13 @@ where
             },
         )?;
 
+        FULLNODE_METRICS
+            .highest_committed_l2_height
+            .set(end_l2_height as f64);
+        FULLNODE_METRICS
+            .highest_committed_index
+            .set(sequencer_commitment.index as f64);
+
         Ok(ProcessingResult::Success)
     }
 
@@ -716,6 +723,10 @@ where
                 commitment_index: sequencer_commitment_index_range.1,
             },
         )?;
+
+        FULLNODE_METRICS
+            .highest_proven_l2_height
+            .set(end_l2_height as f64);
 
         Ok(ProcessingResult::Success)
     }

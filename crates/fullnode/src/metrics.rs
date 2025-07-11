@@ -3,7 +3,7 @@
 //! This module defines metrics that track various aspects of fullnode operation,
 //! including block processing times and current block numbers.
 
-use metrics::{Gauge, Histogram};
+use metrics::{Counter, Gauge, Histogram};
 use metrics_derive::Metrics;
 use once_cell::sync::Lazy;
 
@@ -34,6 +34,18 @@ pub struct FullnodeMetrics {
     /// Histogram tracking the time taken to process batch proofs
     #[metric(describe = "The duration of processing a batch proof")]
     pub batch_proof_processing_time: Histogram,
+
+    /// Counter for the highest committed l2 height
+    #[metric(describe = "The highest committed l2 height")]
+    pub highest_committed_l2_height: Gauge,
+
+    /// Gauge for the highest committed l2 height
+    #[metric(describe = "The highest committed l2 height")]
+    pub highest_committed_index: Gauge,
+
+    /// Counter for the highest proven l2 height
+    #[metric(describe = "The highest proven l2 height")]
+    pub highest_proven_l2_height: Counter,
 }
 
 /// Global instance of fullnode metrics
