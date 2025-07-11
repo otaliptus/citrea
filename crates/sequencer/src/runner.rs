@@ -567,16 +567,17 @@ where
         );
 
         let state_diff = self.save_l2_block(l2_block, l2_block_result, tx_hashes, blobs)?;
-        histogram!(
-            "sequencer_block_production_time",
-            "block_number" => l2_height.to_string()
-        )
-        .record(block_production_start.elapsed().as_millis() as f64);
 
         self.ledger_db
             .set_state_diff(L2BlockNumber(l2_height), &state_diff)?;
 
         self.maintain_mempool(l1_fee_failed_txs)?;
+
+        histogram!(
+            "sequencer_block_production_time",
+            "block_number" => l2_height.to_string()
+        )
+        .record(block_production_start.elapsed().as_millis() as f64);
 
         // Update last used l1 height if this is a new da block
         if let Some(l1_height) = last_da_block_height {
