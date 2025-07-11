@@ -437,6 +437,7 @@ impl BitcoinService {
 
     async fn queue_transactions(&self, txs: Vec<SignedTxPair>) {
         self.tx_queue.lock().await.extend(txs);
+        gauge!("bitcoin_da_transaction_queue_size").set(self.tx_queue.lock().await.len() as f64);
     }
 
     /// Send transaction out of the queue to DA until the first error.
@@ -459,6 +460,7 @@ impl BitcoinService {
             match self.send_signed_transaction(tx).await {
                 Ok(ids) => {
                     queue.pop_front();
+                    gauge!("bitcoin_da_transaction_queue_size").decrement(1);
                     txids.extend(ids)
                 }
                 Err(e) => {
