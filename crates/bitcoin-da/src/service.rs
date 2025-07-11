@@ -26,7 +26,7 @@ use citrea_common::utils::read_env;
 use citrea_primitives::compression::{compress_blob, decompress_blob};
 use citrea_primitives::MAX_TX_BODY_SIZE;
 use lru::LruCache;
-use metrics::gauge;
+use metrics::{gauge, histogram};
 use reth_tasks::shutdown::GracefulShutdown;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::{DaSpec, DaTxRequest, DataOnDa, SequencerCommitment};
@@ -296,6 +296,7 @@ impl BitcoinService {
         tx_request: DaTxRequest,
         fee_sat_per_vbyte: u64,
     ) -> Result<Vec<[TxWithId; 2]>> {
+        let now = std::time::Instant::now();
         // Prevent sending tx to DA while transaction queue is not empty
         // otherwise, the tx that will be built may use the same UTXO as the one in the queue
         if !self.tx_queue.lock().await.is_empty() {
@@ -324,6 +325,9 @@ impl BitcoinService {
 
         // Process transaction queue.
         self.process_transaction_queue().await?;
+
+        histogram!("bitcoin_da_transaction_queue_processing_time")
+            .record(now.elapsed().as_millis() as f64);
 
         Ok(txs)
     }

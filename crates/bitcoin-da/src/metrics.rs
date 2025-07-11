@@ -15,6 +15,9 @@ pub struct BitcoinDaMetrics {
     /// Bitcoin DA Transaction count in queue
     #[metric(describe = "How many transactions are currently in the Bitcoin DA queue")]
     pub(crate) transaction_queue_size: Gauge,
+    /// Histogram tracking the time taken to process a transaction in the queue
+    #[metric(describe = "The time taken to process the Bitcoin DA queue")]
+    pub(crate) transaction_queue_processing_time: Histogram,
 }
 
 /// Bitcoin DA metrics
