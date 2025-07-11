@@ -39,6 +39,7 @@ use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use uuid::Uuid;
 
+use crate::metrics::BATCH_PROVER_METRICS;
 use crate::partition::{Partition, PartitionMode, PartitionReason, PartitionState};
 
 /// Request types for the Prover service.
@@ -545,6 +546,7 @@ where
         partition: &Partition<'_>,
         _job_id: Uuid,
     ) -> anyhow::Result<BatchProofCircuitInputV3> {
+        let input_preparation_start = std::time::Instant::now();
         let initial_state_root = self
             .ledger_db
             .get_l2_state_root(partition.start_height - 1)
@@ -583,13 +585,19 @@ where
             .as_ref()
             .map(|c| get_prev_hash_proof(c, &self.ledger_db));
 
+        let sequencer_commitments = partition.commitments.to_vec();
+
+        BATCH_PROVER_METRICS
+            .total_input_preparation_time
+            .record(input_preparation_start.elapsed().as_secs_f64());
+
         Ok(BatchProofCircuitInputV3 {
             initial_state_root,
             final_state_root,
             l2_blocks: committed_l2_blocks,
             state_transition_witnesses,
             short_header_proofs,
-            sequencer_commitments: partition.commitments.to_vec(),
+            sequencer_commitments,
             cache_prune_l2_heights,
             last_l1_hash_witness,
             previous_sequencer_commitment,
@@ -905,6 +913,7 @@ pub(crate) fn get_batch_proof_circuit_input_from_commitments<
         committed_l2_blocks.push_back(l2_blocks);
     }
 
+    let start_generate_cumulative_witness = std::time::Instant::now();
     // Replay transactions in the commitment blocks and collect cumulative witnesses
     let (
         state_transition_witnesses,
@@ -917,6 +926,10 @@ pub(crate) fn get_batch_proof_circuit_input_from_commitments<
         storage_manager,
         sequencer_pub_key,
     )?;
+
+    BATCH_PROVER_METRICS
+        .cumulative_witness_generation_time
+        .record(start_generate_cumulative_witness.elapsed().as_millis_f64());
 
     Ok(CommitmentStateTransitionData {
         short_header_proofs,
