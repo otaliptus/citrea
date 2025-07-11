@@ -13,6 +13,7 @@ use citrea_common::cache::L1BlockCache;
 use citrea_common::da::{extract_zk_proofs_and_sequencer_commitments, sync_l1, ProofOrCommitment};
 use citrea_common::utils::get_tangerine_activation_height_non_zero;
 use citrea_primitives::forks::fork_from_block_number;
+use metrics::histogram;
 use reth_tasks::shutdown::GracefulShutdown;
 use rs_merkle::algorithms::Sha256;
 use rs_merkle::MerkleTree;
@@ -214,6 +215,7 @@ where
                         );
                         continue;
                     }
+                    let start_commitment_process = std::time::Instant::now();
                     if let Err(e) = self
                         .process_sequencer_commitment(
                             l1_block.header().height(),
@@ -234,6 +236,8 @@ where
                             }
                         }
                     }
+                    histogram!("fullnode_sequencer_commitment_processing_time")
+                        .record(start_commitment_process.elapsed().as_millis() as f64);
                 }
                 ProofOrCommitment::Proof(proof) => {
                     if let Err(e) = self

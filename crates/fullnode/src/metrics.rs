@@ -26,6 +26,10 @@ pub struct FullnodeMetrics {
     /// Histogram tracking the time taken to process L2 blocks
     #[metric(describe = "The duration of processing a single l2 block")]
     pub process_l2_block: Histogram,
+
+    /// Histogram tracking the time taken to process sequencer commitments
+    #[metric(describe = "The duration of processing a sequencer commitment")]
+    pub sequencer_commitment_processing_time: Histogram,
 }
 
 /// Global instance of fullnode metrics
