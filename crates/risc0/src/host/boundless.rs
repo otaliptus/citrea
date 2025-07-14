@@ -160,7 +160,14 @@ impl BoundlessProver {
 
         // Start boundless proving session
         let (req_id, request_expiry) = self
-            .send_request(request, job_id, image_id, receipt_type, mcycles_count, max_possible_price)
+            .send_request(
+                request,
+                job_id,
+                image_id,
+                receipt_type,
+                mcycles_count,
+                max_possible_price,
+            )
             .await?;
 
         let rx = self.spawn_handler(
@@ -403,7 +410,12 @@ impl BoundlessProver {
         // TODO: https://github.com/chainwayxyz/citrea/issues/2417
         // Define new request with updated parameters
         let (new_min_price_per_mcycle, new_max_price_per_mcycle, new_lock_timeout) = {
-            let is_locked = match self.client.boundless_market.is_locked(U256::from_str(request_id).unwrap()).await{
+            let is_locked = match self
+                .client
+                .boundless_market
+                .is_locked(U256::from_str(request_id).unwrap())
+                .await
+            {
                 Ok(locked) => locked,
                 Err(e) => {
                     tracing::error!(
@@ -422,10 +434,10 @@ impl BoundlessProver {
                 .minPrice
                 .div_ceil(U256::from(mcycles_count));
             let max_price_per_mcycle = failed_order
-                    .request
-                    .offer
-                    .maxPrice
-                    .div_ceil(U256::from(mcycles_count));
+                .request
+                .offer
+                .maxPrice
+                .div_ceil(U256::from(mcycles_count));
             let lock_timeout = failed_order.request.offer.lockTimeout;
 
             if is_locked {
@@ -433,7 +445,6 @@ impl BoundlessProver {
                 // Increase the lock timeout.
                 let lock_timeout = lock_timeout.saturating_mul(2);
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
-
             } else {
                 // If not locked, that means the request was never taken by a prover.
                 // Increase the min and max price per mcycle.
@@ -447,7 +458,6 @@ impl BoundlessProver {
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
             }
         };
-       
 
         let new_request = self.build_proof_request(
             image_id,
@@ -472,7 +482,14 @@ impl BoundlessProver {
 
         // Resubmit the request with updated parameters
         let Ok((new_req_id, new_exp_time)) = self
-            .send_request(new_request, job_id, image_id, receipt_type, mcycles_count, max_possible_price)
+            .send_request(
+                new_request,
+                job_id,
+                image_id,
+                receipt_type,
+                mcycles_count,
+                max_possible_price,
+            )
             .await
         else {
             tracing::error!(
