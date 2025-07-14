@@ -160,7 +160,7 @@ impl BoundlessProver {
 
         // Start boundless proving session
         let (req_id, request_expiry) = self
-            .send_request(request, job_id, image_id, receipt_type, mcycles_count)
+            .send_request(request, job_id, image_id, receipt_type, mcycles_count, max_possible_price)
             .await?;
 
         let rx = self.spawn_handler(
@@ -170,6 +170,7 @@ impl BoundlessProver {
             image_id,
             request_expiry,
             mcycles_count,
+            max_possible_price,
         );
 
         Ok(rx)
@@ -218,6 +219,7 @@ impl BoundlessProver {
         image_id: Digest,
         receipt_type: ReceiptType,
         mcycles_count: u64,
+        max_possible_price: u64,
     ) -> anyhow::Result<(String, u64)> {
         // Start boundless proving session
         tracing::info!(
@@ -251,6 +253,7 @@ impl BoundlessProver {
             image_id: image_id.into(),
             receipt_type,
             mcycles_count,
+            max_possible_price,
         };
         self.ledger_db
             .upsert_pending_boundless_session(job_id, db_session)
@@ -267,6 +270,7 @@ impl BoundlessProver {
         image_id: Digest,
         request_expiry: u64,
         mcycles_count: u64,
+        max_possible_price: u64,
     ) -> oneshot::Receiver<ProofWithJob> {
         let this = self.clone();
         let (tx, rx) = oneshot::channel();
@@ -323,6 +327,7 @@ impl BoundlessProver {
                             mcycles_count,
                             image_id,
                             receipt_type,
+                            max_possible_price,
                         )
                         .await
                         {
@@ -368,6 +373,7 @@ impl BoundlessProver {
         mcycles_count: u64,
         image_id: Digest,
         receipt_type: ReceiptType,
+        max_possible_price: u64,
     ) -> anyhow::Result<()> {
         // Remove failed job from pending boundless sessions
         self.ledger_db
@@ -433,9 +439,11 @@ impl BoundlessProver {
                 // Increase the min and max price per mcycle.
                 let min_price_per_mcycle = min_price_per_mcycle
                     .saturating_mul(U256::from(15))
-                    .div_ceil(U256::from(10));
+                    .div_ceil(U256::from(10))
+                    .min(U256::from(max_possible_price));
                 let max_price_per_mcycle = max_price_per_mcycle
-                    .saturating_mul(U256::from(2));
+                    .saturating_mul(U256::from(2))
+                    .min(U256::from(max_possible_price));
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
             }
         };
@@ -464,7 +472,7 @@ impl BoundlessProver {
 
         // Resubmit the request with updated parameters
         let Ok((new_req_id, new_exp_time)) = self
-            .send_request(new_request, job_id, image_id, receipt_type, mcycles_count)
+            .send_request(new_request, job_id, image_id, receipt_type, mcycles_count, max_possible_price)
             .await
         else {
             tracing::error!(
@@ -543,6 +551,7 @@ impl BoundlessProver {
                 session.image_id.into(),
                 session.request_expiry,
                 session.mcycles_count,
+                session.max_possible_price,
             );
             rxs.push(rx);
         }

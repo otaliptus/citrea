@@ -147,4 +147,6 @@ pub struct BoundlessSession {
     pub receipt_type: ReceiptType,
     /// Number of mcycles used for the proof generation
     pub mcycles_count: u64,
+    /// Maximum possible price per mcycle for the request
+    pub max_possible_price: u64,
 }
