@@ -3,7 +3,7 @@
 //! This module defines metrics that track various aspects of parallel prover service,
 //! including block processing times and current block numbers.
 
-use metrics::{Gauge, Histogram};
+use metrics::Gauge;
 use metrics_derive::Metrics;
 use once_cell::sync::Lazy;
 

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use prover_services::{ParallelProverService, ProofData, ProofGenMode};
+use prover_services::{ParallelProverService, ProofData, ProofGenMode, ProofWithDuration};
 use sov_mock_da::{MockAddress, MockDaService, MockHash};
 use sov_mock_zkvm::MockZkvm;
 use sov_rollup_interface::zk::{Proof, ReceiptType, ZkvmHost};
@@ -186,7 +186,7 @@ fn extract_output_header(proof: &Vec<u8>) -> MockHash {
 async fn start_proof(
     prover_service: &ParallelProverService<MockDaService, MockZkvm>,
     header_hash: MockHash,
-) -> (Uuid, oneshot::Receiver<Proof>) {
+) -> (Uuid, oneshot::Receiver<ProofWithDuration>) {
     // Spawn mock proving in the background
     let id = Uuid::now_v7();
     let rx = prover_service
