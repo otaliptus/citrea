@@ -394,6 +394,22 @@ impl BoundlessProver {
             return Ok(());
         };
 
+        // Retrieve the maximum possible price again from the pricing service as the price of ether may have changed.
+        let max_possible_price = match self.pricing_service
+            .get_price(mcycles_count)
+            .await
+        {
+            Ok(price) => price.max_possible_price,
+            Err(_) => {
+                tracing::error!(
+                    "Failed to get max possible price for job: {} request_id: {}",
+                    job_id,
+                    request_id,
+                );
+                return Ok(());
+            }
+        };
+
         // TODO: https://github.com/chainwayxyz/citrea/issues/2417
         // Define new request with updated parameters
         let (new_min_price_per_mcycle, new_max_price_per_mcycle, new_lock_timeout) = {
@@ -433,9 +449,11 @@ impl BoundlessProver {
                 // Increase the min and max price per mcycle.
                 let min_price_per_mcycle = min_price_per_mcycle
                     .saturating_mul(U256::from(15))
-                    .div_ceil(U256::from(10));
+                    .div_ceil(U256::from(10))
+                    .min(U256::from(max_possible_price));
                 let max_price_per_mcycle = max_price_per_mcycle
-                    .saturating_mul(U256::from(2));
+                    .saturating_mul(U256::from(2))
+                    .min(U256::from(max_possible_price));
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
             }
         };
