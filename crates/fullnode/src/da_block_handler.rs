@@ -726,7 +726,7 @@ where
 
         FULLNODE_METRICS
             .highest_proven_l2_height
-            .set(end_l2_height as f64);
+            .absolute(end_l2_height);
 
         Ok(ProcessingResult::Success)
     }

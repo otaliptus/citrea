@@ -28,6 +28,8 @@ jsonrpsee = { workspace = true, optional = true }
 k256 = { workspace = true }
 lru = { workspace = true, optional = true }
 metrics = { workspace = true, optional = true }
+metrics-derive = { workspace = true, optional = true }
+once_cell = { workspace = true, optional = true }
 pin-project = { workspace = true, optional = true, features = [] }
 reqwest = { workspace = true, optional = true }
 reth-tasks = { workspace = true, optional = true }
@@ -53,6 +55,8 @@ native = [
   "dep:lru",
   "dep:tokio",
   "dep:metrics",
+  "dep:metrics-derive",
+  "dep:once_cell",
   "dep:pin-project",
   "dep:reth-tasks",
   "dep:tracing",

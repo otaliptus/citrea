@@ -167,7 +167,7 @@ where
                             .expect("Commit check tokio blocking task failed")
                             .expect("Commitment criteria check failed")
                         {
-                            if let Err(e) = self.commit(index, commitment_range).await {
+                            if let Err(e) = self.commit(index, commitment_range.clone()).await {
                                 // We just log error and continue here as the controller updated its internal state and it can
                                 // continue functioning correctly. We just need to resubmit the failed commitment to DA.
                                 error!("Failed to submit commitment: {:?}", e);
@@ -180,7 +180,7 @@ where
                             ).record(
                                 start_commitment_processing
                                     .elapsed()
-                                    .as_millis_f64(),
+                                    .as_millis() as f64,
                             );
                             // Reset the start time for the next commitment processing
                             start_commitment_processing = Instant::now();

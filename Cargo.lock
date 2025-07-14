@@ -1602,6 +1602,8 @@ dependencies = [
  "k256",
  "lru 0.13.0",
  "metrics 0.23.0",
+ "metrics-derive",
+ "once_cell",
  "pin-project",
  "rand 0.8.5",
  "reqwest",

@@ -167,6 +167,7 @@ impl L2Block {
         self.header.inner.state_root
     }
 
+    /// Calculates the total size of the L2 block in bytes.
     pub fn calculate_size(&self) -> usize {
         let header_size = self.header.inner.height.to_le_bytes().len()
             + self.header.inner.prev_hash.len()

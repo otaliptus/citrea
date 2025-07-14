@@ -241,6 +241,7 @@ where
             // when we update reth we'll need to call transactions.mark_invalid()
             #[allow(clippy::while_let_on_iterator)]
             while let Some(evm_tx) = transactions.next() {
+                let start_tx = Instant::now();
                 let buf = evm_tx.to_consensus().into_inner().encoded_2718();
                 let rlp_tx = RlpEvmTransaction { rlp: buf };
                 let call_txs = CallMessage {
@@ -359,7 +360,7 @@ where
                 histogram!("sequencer_dry_run_tx_time").record(
                     Instant::now()
                         .saturating_duration_since(start_tx)
-                        .as_millis_f64(),
+                        .as_millis() as f64,
                 );
             }
             SEQUENCER_METRICS.dry_run_execution.record(

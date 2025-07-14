@@ -74,7 +74,7 @@ impl TransactionV1 {
 
     pub fn calculate_size(&self) -> usize {
         self.signature.len()
-            + self.pub_key.to_blob().len()
+            + self.pub_key.pub_key.to_sec1_bytes().len()
             + self.runtime_msg.len()
             + EXTEND_MESSAGE_LEN
     }
@@ -133,8 +133,8 @@ impl TransactionV2 {
     }
 
     pub fn calculate_size(&self) -> usize {
-        self.signature.to_blob().len()
-            + self.pub_key.to_blob().len()
+        borsh::to_vec(&self.signature).unwrap().len()
+            + self.pub_key.pub_key.to_sec1_bytes().len()
             + self.runtime_msg.len()
             + EXTEND_MESSAGE_LEN
     }

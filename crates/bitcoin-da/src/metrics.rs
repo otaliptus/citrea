@@ -1,4 +1,4 @@
-use metrics::Gauge;
+use metrics::{Gauge, Histogram};
 use metrics_derive::Metrics;
 use once_cell::sync::Lazy;
 
