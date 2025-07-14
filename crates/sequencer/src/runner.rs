@@ -222,6 +222,7 @@ where
             }
 
             let evm = citrea_evm::Evm::<DefaultContext>::default();
+            let start_dry_run_system_txs = Instant::now();
             // Initially fill with system transactions if any
             let (mut all_txs, mut working_set_to_discard) = self
                 .produce_and_run_system_transactions(
@@ -232,6 +233,9 @@ where
                     da_blocks,
                     &mut nonce,
                 )?;
+            SEQUENCER_METRICS
+                .dry_run_system_txs_time
+                .record(start_dry_run_system_txs.elapsed().as_millis() as f64);
 
             // Track transactions that failed due to insufficient L1 fee balance
             let mut l1_fee_failed_txs = vec![];
@@ -448,6 +452,7 @@ where
         l2_height: u64,
         last_used_l1_height: &mut u64,
     ) -> anyhow::Result<u64> {
+        let start_dry_run_preparation = Instant::now();
         let active_fork_spec = self.fork_manager.active_fork().spec_id;
 
         // TODO: after L2Block refactor PR, we'll need to change native provider
@@ -480,6 +485,9 @@ where
         let evm_txs = self.get_best_transactions()?;
 
         let last_da_block_height = da_blocks.last().map(|b| b.header().height());
+        SEQUENCER_METRICS
+            .dry_run_preparation_time
+            .record(start_dry_run_preparation.elapsed().as_millis() as f64);
 
         // Dry running transactions would basically allow for figuring out a list of
         // all transactions that would fit into the current block and the list of transactions
@@ -504,6 +512,7 @@ where
 
         let mut working_set = WorkingSet::new(prestate.clone());
 
+        let start_begin_l2_block = Instant::now();
         if let Err(err) = self.stf.begin_l2_block(&mut working_set, &l2_block_info) {
             warn!(
                 "Failed to apply l2 block hook: {:?} \n reverting batch workspace",
@@ -511,7 +520,11 @@ where
             );
             bail!("Failed to apply begin l2 block hook: {:?}", err)
         }
+        SEQUENCER_METRICS
+            .begin_l2_block_time
+            .record(start_begin_l2_block.elapsed().as_millis() as f64);
 
+        let start_encode_and_sign_sov_tx = Instant::now();
         let mut blobs = vec![];
         let mut txs = vec![];
 
@@ -531,18 +544,34 @@ where
             blobs.push(signed_tx.to_blob()?);
             txs.push(signed_tx);
         }
+        SEQUENCER_METRICS
+            .encode_and_sign_sov_tx_time
+            .record(start_encode_and_sign_sov_tx.elapsed().as_millis() as f64);
 
+        let start_apply_txs = Instant::now();
         self.stf
             .apply_l2_block_txs(&l2_block_info, &txs, &mut working_set)
             .expect("dry_run_transactions should have already checked this");
+        SEQUENCER_METRICS
+            .apply_l2_block_txs_time
+            .record(start_apply_txs.elapsed().as_millis() as f64);
 
+        let start_end_l2_block = Instant::now();
         self.stf.end_l2_block(l2_block_info, &mut working_set)?;
+        SEQUENCER_METRICS
+            .end_l2_block_time
+            .record(start_end_l2_block.elapsed().as_millis() as f64);
 
         // Finalize l2 block
+        let start_finalize_l2_block = Instant::now();
         let l2_block_result = self
             .stf
             .finalize_l2_block(active_fork_spec, working_set, prestate);
+        SEQUENCER_METRICS
+            .finalize_l2_block_time
+            .record(start_finalize_l2_block.elapsed().as_millis() as f64);
 
+        let start_sign_l2_block_header = Instant::now();
         // Calculate tx hashes for merkle root
         let tx_hashes = compute_tx_hashes(&txs, active_fork_spec);
         let tx_merkle_root = compute_tx_merkle_root(&tx_hashes, active_fork_spec);
@@ -566,13 +595,24 @@ where
             l2_block.height(),
             evm_txs_count
         );
+        SEQUENCER_METRICS
+            .sign_l2_block_header_time
+            .record(start_sign_l2_block_header.elapsed().as_millis() as f64);
 
+        let save_l2_block_start = Instant::now();
         let state_diff = self.save_l2_block(l2_block, l2_block_result, tx_hashes, blobs)?;
+        SEQUENCER_METRICS
+            .save_l2_block_time
+            .record(save_l2_block_start.elapsed().as_millis() as f64);
 
         self.ledger_db
             .set_state_diff(L2BlockNumber(l2_height), &state_diff)?;
 
+        let start_maintain_mempool = Instant::now();
         self.maintain_mempool(l1_fee_failed_txs)?;
+        SEQUENCER_METRICS
+            .maintain_mempool_time
+            .record(start_maintain_mempool.elapsed().as_millis() as f64);
 
         histogram!(
             "sequencer_block_production_time",

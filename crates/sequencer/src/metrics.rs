@@ -44,6 +44,52 @@ pub struct SequencerMetrics {
         describe = "The time taken to dry run a transaction in the current block in milliseconds"
     )]
     pub dry_run_tx_time: Histogram,
+
+    /// Histogram tracking the time taken to save an L2 block
+    #[metric(describe = "The time taken to save an L2 block in milliseconds")]
+    pub save_l2_block_time: Histogram,
+
+    /// Histogram tracking the time taken to apply L2 block transactions
+    #[metric(describe = "The time taken to apply transactions in an L2 block in milliseconds")]
+    pub apply_l2_block_txs_time: Histogram,
+
+    /// Histogram tracking the time taken to end an L2 block
+    #[metric(describe = "The time taken to end an L2 block in milliseconds")]
+    pub end_l2_block_time: Histogram,
+
+    /// Histogram tracking the time taken to finalize an L2 block
+    #[metric(describe = "The time taken to finalize an L2 block in milliseconds")]
+    pub finalize_l2_block_time: Histogram,
+
+    /// Histogram tracking the time taken to begin an L2 block
+    #[metric(describe = "The time taken to begin an L2 block in milliseconds")]
+    pub begin_l2_block_time: Histogram,
+
+    /// Histogram tracking the time taken to encapsulate all evm txs in a sovereign call message, encoding it and signing it
+    #[metric(
+        describe = "The time taken to encapsulate all evm txs in a sovereign call message, encoding it and signing it in milliseconds"
+    )]
+    pub encode_and_sign_sov_tx_time: Histogram,
+
+    /// Histogram tracking the time taken to sign an L2 block header, including the time to calculate tx merkle root
+    #[metric(
+        describe = "The time taken to sign an L2 block header in milliseconds, including the time to calculate tx merkle root"
+    )]
+    pub sign_l2_block_header_time: Histogram,
+
+    /// Histogram tracking the time taken to maintain the mempool after processing an L2 block
+    #[metric(
+        describe = "The time taken to maintain the mempool after processing an L2 block in milliseconds"
+    )]
+    pub maintain_mempool_time: Histogram,
+
+    /// Histogram tracking the time taken to prepare for a dry run
+    #[metric(describe = "The time taken to prepare for a dry run in milliseconds")]
+    pub dry_run_preparation_time: Histogram,
+
+    /// Histogram tracking the time taken to dry run system transactions
+    #[metric(describe = "The time taken to dry run system transactions in milliseconds")]
+    pub dry_run_system_txs_time: Histogram,
 }
 
 /// Sequencer metrics
