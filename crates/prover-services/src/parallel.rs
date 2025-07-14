@@ -9,7 +9,7 @@ use tokio::sync::{oneshot, Mutex, Notify};
 use tracing::{debug, error, info, instrument, warn};
 use uuid::Uuid;
 
-use crate::{ProofData, ProofGenMode};
+use crate::{ProofData, ProofGenMode, ProofWithDuration};
 
 /// Prover service capable of invoking the zkVM proving sessions in parallel.
 pub struct ParallelProverService<Da, Vm>
@@ -92,7 +92,11 @@ where
     ///
     /// * `data` - the proof data to be used for generating a proof
     /// * `receipt_type` - the expected receipt type of the proof
-    pub async fn prove(&self, data: ProofData, receipt_type: ReceiptType) -> anyhow::Result<Proof> {
+    pub async fn prove(
+        &self,
+        data: ProofData,
+        receipt_type: ReceiptType,
+    ) -> anyhow::Result<ProofWithDuration> {
         let job_id = Uuid::nil();
         let rx = self.start_proving(data, receipt_type, job_id).await?;
         Ok(rx.await.expect("Proof channel should not close"))
@@ -117,7 +121,7 @@ where
         data: ProofData,
         receipt_type: ReceiptType,
         job_id: Uuid,
-    ) -> anyhow::Result<oneshot::Receiver<Proof>> {
+    ) -> anyhow::Result<oneshot::Receiver<ProofWithDuration>> {
         self.reserve_proof_slot().await;
 
         let ProofData {
@@ -134,6 +138,7 @@ where
         }
 
         // start proof immediately in the background
+        let proof_start_time = std::time::Instant::now();
         let proof_rx = make_proof(vm, job_id, elf, self.proof_mode, receipt_type)
             .context("Failed to start proving")?;
         debug!("Started proving job");
@@ -150,7 +155,12 @@ where
 
             match proof {
                 Ok(proof) => {
-                    tx.send(proof.proof)
+                    let duration = proof_start_time.elapsed().as_secs_f64();
+                    let proof_with_duration = ProofWithDuration {
+                        proof: proof.proof.clone(),
+                        duration,
+                    };
+                    tx.send(proof_with_duration)
                         .expect("Proof channel should not close");
                 }
                 Err(e) => {

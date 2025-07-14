@@ -5,12 +5,13 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 
+use bitcoin_da::spec::proof;
 use citrea_common::backup::BackupManager;
 use citrea_common::cache::L1BlockCache;
 use citrea_common::da::sync_l1;
 use citrea_common::LightClientProverConfig;
 use citrea_primitives::forks::fork_from_block_number;
-use prover_services::{ParallelProverService, ProofData};
+use prover_services::{ParallelProverService, ProofData, ProofWithDuration};
 use reth_tasks::shutdown::GracefulShutdown;
 use sov_db::ledger_db::{LightClientProverLedgerOps, SharedLedgerOps};
 use sov_db::schema::types::light_client_proof::StoredLightClientProofOutput;
@@ -274,7 +275,8 @@ where
             witness: result.witness,
         };
 
-        let proof = self.prove(light_client_elf, circuit_input, vec![]).await?;
+        let proof_with_duration = self.prove(light_client_elf, circuit_input, vec![]).await?;
+        let proof = proof_with_duration.proof;
 
         let circuit_output = Vm::extract_output::<LightClientCircuitOutput>(&proof)
             .expect("Should deserialize valid proof");
@@ -296,6 +298,10 @@ where
             proof,
             stored_proof_output,
         )?;
+
+        LIGHT_CLIENT_METRICS
+            .proving_time
+            .record(proof_with_duration.duration);
 
         self.ledger_db
             .set_last_scanned_l1_height(SlotNumber(l1_block.header().height()))
@@ -320,7 +326,7 @@ where
         light_client_elf: Vec<u8>,
         circuit_input: LightClientCircuitInput<<Da as DaService>::Spec>,
         assumptions: Vec<Vec<u8>>,
-    ) -> Result<Proof, anyhow::Error> {
+    ) -> Result<ProofWithDuration, anyhow::Error> {
         let data = ProofData {
             input: borsh::to_vec(&circuit_input)?,
             assumptions,

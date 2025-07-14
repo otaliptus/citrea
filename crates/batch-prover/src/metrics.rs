@@ -42,6 +42,14 @@ pub struct BatchProverMetrics {
     /// Offchain log cache size in witness generation
     #[metric(describe = "The size of the offchain log cache in witness generation")]
     pub offchain_log_cache_size: Histogram,
+
+    /// Histogram tracking the time taken to prove a state transition
+    #[metric(describe = "The duration of generating a batch proof")]
+    pub proving_time: Histogram,
+
+    /// Number of ongoing proving jobs
+    #[metric(describe = "Number of ongoing proving jobs")]
+    pub ongoing_proving_jobs: Gauge,
 }
 
 /// Batch prover metrics

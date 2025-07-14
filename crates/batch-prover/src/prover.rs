@@ -14,7 +14,7 @@ use citrea_primitives::{MAX_TX_BODY_SIZE, MAX_WITNESS_CACHE_SIZE};
 use citrea_stf::runtime::{CitreaRuntime, DefaultContext};
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use prover_services::{ParallelProverService, ProofData};
+use prover_services::{ParallelProverService, ProofData, ProofWithDuration};
 use rand::Rng;
 use reth_tasks::shutdown::GracefulShutdown;
 use rs_merkle::algorithms::Sha256;
@@ -620,7 +620,7 @@ where
         &self,
         input: BatchProofCircuitInputV3,
         job_id: Uuid,
-    ) -> anyhow::Result<oneshot::Receiver<Proof>> {
+    ) -> anyhow::Result<oneshot::Receiver<ProofWithDuration>> {
         let end_l2_height = input
             .sequencer_commitments
             .last()
@@ -643,6 +643,7 @@ where
             assumptions: vec![],
             elf,
         };
+
         self.prover_service
             .start_proving(proof_data, ReceiptType::Groth16, job_id)
             .await
@@ -663,7 +664,7 @@ where
     /// * `proving_jobs` - A vector of tuples containing the job ID and the signal receiver for each proving job.
     /// * Each job ID is a unique identifier for the proving job, and the signal receiver is used to get the proof once the job is completed.
     #[instrument(skip_all)]
-    fn watch_proving_jobs(&self, proving_jobs: Vec<(Uuid, oneshot::Receiver<Proof>)>) {
+    fn watch_proving_jobs(&self, proving_jobs: Vec<(Uuid, oneshot::Receiver<ProofWithDuration>)>) {
         assert!(!proving_jobs.is_empty(), "received empty jobs list");
 
         let ledger_db = self.ledger_db.clone();
@@ -680,18 +681,27 @@ where
 
         // start watching the proving jobs to finish in the background
         tokio::spawn(async move {
-            while let Some((job_id, proof)) = proving_jobs.next().await {
+            while let Some((job_id, proof_with_duration)) = proving_jobs.next().await {
                 info!("Proving job finished {}", job_id);
 
-                let output = extract_proof_output::<Vm>(&job_id, &proof, &code_commitments_by_spec);
+                let output = extract_proof_output::<Vm>(
+                    &job_id,
+                    &proof_with_duration.proof,
+                    &code_commitments_by_spec,
+                );
 
                 // stores proof and marks job as waiting for da
                 ledger_db
-                    .put_proof_by_job_id(job_id, proof.clone(), output.into())
+                    .put_proof_by_job_id(job_id, proof_with_duration.proof.clone(), output.into())
                     .expect("Should put proof to db");
 
+                // Record the proving time metric
+                BATCH_PROVER_METRICS
+                    .proving_time
+                    .record(proof_with_duration.duration);
+
                 let tx_id = prover_service
-                    .submit_proof(proof, job_id)
+                    .submit_proof(proof_with_duration.proof, job_id)
                     .await
                     .expect("Failed to submit proof");
 
@@ -929,7 +939,7 @@ pub(crate) fn get_batch_proof_circuit_input_from_commitments<
 
     BATCH_PROVER_METRICS
         .cumulative_witness_generation_time
-        .record(start_generate_cumulative_witness.elapsed().as_millis_f64());
+        .record(start_generate_cumulative_witness.elapsed().as_millis() as f64);
 
     Ok(CommitmentStateTransitionData {
         short_header_proofs,
