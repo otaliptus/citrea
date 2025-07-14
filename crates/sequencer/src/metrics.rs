@@ -3,6 +3,7 @@ use metrics_derive::Metrics;
 use once_cell::sync::Lazy;
 
 /// Defines the metrics being collected for the sequencer
+#[allow(unused)]
 #[derive(Metrics)]
 #[metrics(scope = "sequencer")]
 pub struct SequencerMetrics {

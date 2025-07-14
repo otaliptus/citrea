@@ -126,8 +126,6 @@ where
                                 if should_halt {
                                     warn!("CommitmentService: Commitments halted via RPC");
                                 } else {
-                                    // Reset the start time for the next commitment processing
-                                    start_commitment_processing = Instant::now();
                                     info!("CommitmentService: Commitments resumed via RPC");
                                 }
                             }

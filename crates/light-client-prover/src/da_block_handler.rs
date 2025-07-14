@@ -5,7 +5,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 
-use bitcoin_da::spec::proof;
 use citrea_common::backup::BackupManager;
 use citrea_common::cache::L1BlockCache;
 use citrea_common::da::sync_l1;
@@ -23,7 +22,7 @@ use sov_rollup_interface::services::da::{DaService, SlotData};
 use sov_rollup_interface::spec::SpecId;
 use sov_rollup_interface::zk::light_client_proof::input::LightClientCircuitInput;
 use sov_rollup_interface::zk::light_client_proof::output::LightClientCircuitOutput;
-use sov_rollup_interface::zk::{Proof, ReceiptType, ZkvmHost};
+use sov_rollup_interface::zk::{ReceiptType, ZkvmHost};
 use sov_rollup_interface::Network;
 use tokio::select;
 use tokio::sync::Mutex;
