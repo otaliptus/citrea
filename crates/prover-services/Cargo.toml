@@ -16,6 +16,9 @@ sov-rollup-interface = { path = "../sovereign-sdk/rollup-interface" }
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 futures = { workspace = true }
+metrics = { workspace = true }
+metrics-derive = { workspace = true }
+once_cell = { workspace = true }
 rand = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

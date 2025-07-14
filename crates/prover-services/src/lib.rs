@@ -5,6 +5,7 @@
 mod parallel;
 pub use parallel::*;
 use sov_rollup_interface::zk::Proof;
+mod metrics;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ProofGenMode {

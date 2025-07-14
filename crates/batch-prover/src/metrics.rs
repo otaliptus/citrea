@@ -46,10 +46,6 @@ pub struct BatchProverMetrics {
     /// Histogram tracking the time taken to prove a state transition
     #[metric(describe = "The duration of generating a batch proof")]
     pub proving_time: Histogram,
-
-    /// Number of ongoing proving jobs
-    #[metric(describe = "Number of ongoing proving jobs")]
-    pub ongoing_proving_jobs: Gauge,
 }
 
 /// Batch prover metrics

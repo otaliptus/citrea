@@ -9,6 +9,7 @@ use tokio::sync::{oneshot, Mutex, Notify};
 use tracing::{debug, error, info, instrument, warn};
 use uuid::Uuid;
 
+use crate::metrics::PARALLEL_PROVER_METRICS;
 use crate::{ProofData, ProofGenMode, ProofWithDuration};
 
 /// Prover service capable of invoking the zkVM proving sessions in parallel.
@@ -62,6 +63,8 @@ where
                 }
             }
         };
+
+        PARALLEL_PROVER_METRICS.ongoing_proving_jobs.set(0);
 
         Ok(Self {
             parallel_proof_limit,
@@ -152,6 +155,7 @@ where
             let proof = proof_rx.await;
 
             *ongoing_proof_count.lock().await -= 1;
+            PARALLEL_PROVER_METRICS.ongoing_proving_jobs.decrement(1);
 
             match proof {
                 Ok(proof) => {
@@ -183,6 +187,7 @@ where
         // try to reserve a slot if there is one available
         if *ongoing_proof_count < self.parallel_proof_limit {
             *ongoing_proof_count += 1;
+            PARALLEL_PROVER_METRICS.ongoing_proving_jobs.increment(1);
             return;
         }
         // release the lock manually just in case
@@ -199,6 +204,7 @@ where
             let mut ongoing_proof_count = self.ongoing_proof_count.lock().await;
             if *ongoing_proof_count < self.parallel_proof_limit {
                 *ongoing_proof_count += 1;
+                PARALLEL_PROVER_METRICS.ongoing_proving_jobs.increment(1);
                 return;
             }
         }
