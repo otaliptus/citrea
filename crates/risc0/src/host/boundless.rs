@@ -269,6 +269,7 @@ impl BoundlessProver {
         Ok((req_id.to_string(), request_expiry))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn spawn_handler(
         &self,
         job_id: Uuid,
@@ -372,6 +373,7 @@ impl BoundlessProver {
         rx
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn handle_resubmit_on_failed_request(
         &self,
         job_id: Uuid,
