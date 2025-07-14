@@ -395,10 +395,7 @@ impl BoundlessProver {
         };
 
         // Retrieve the maximum possible price again from the pricing service as the price of ether may have changed.
-        let max_possible_price = match self.pricing_service
-            .get_price(mcycles_count)
-            .await
-        {
+        let max_possible_price = match self.pricing_service.get_price(mcycles_count).await {
             Ok(price) => price.max_possible_price,
             Err(_) => {
                 tracing::error!(
@@ -413,7 +410,12 @@ impl BoundlessProver {
         // TODO: https://github.com/chainwayxyz/citrea/issues/2417
         // Define new request with updated parameters
         let (new_min_price_per_mcycle, new_max_price_per_mcycle, new_lock_timeout) = {
-            let is_locked = match self.client.boundless_market.is_locked(U256::from_str(request_id).unwrap()).await{
+            let is_locked = match self
+                .client
+                .boundless_market
+                .is_locked(U256::from_str(request_id).unwrap())
+                .await
+            {
                 Ok(locked) => locked,
                 Err(e) => {
                     tracing::error!(
@@ -432,10 +434,10 @@ impl BoundlessProver {
                 .minPrice
                 .div_ceil(U256::from(mcycles_count));
             let max_price_per_mcycle = failed_order
-                    .request
-                    .offer
-                    .maxPrice
-                    .div_ceil(U256::from(mcycles_count));
+                .request
+                .offer
+                .maxPrice
+                .div_ceil(U256::from(mcycles_count));
             let lock_timeout = failed_order.request.offer.lockTimeout;
 
             if is_locked {
@@ -443,7 +445,6 @@ impl BoundlessProver {
                 // Increase the lock timeout.
                 let lock_timeout = lock_timeout.saturating_mul(2);
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
-
             } else {
                 // If not locked, that means the request was never taken by a prover.
                 // Increase the min and max price per mcycle.
@@ -457,7 +458,6 @@ impl BoundlessProver {
                 (min_price_per_mcycle, max_price_per_mcycle, lock_timeout)
             }
         };
-       
 
         let new_request = self.build_proof_request(
             image_id,
