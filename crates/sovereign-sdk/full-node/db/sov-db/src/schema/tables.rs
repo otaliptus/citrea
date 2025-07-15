@@ -55,6 +55,7 @@ pub const SEQUENCER_LEDGER_TABLES: &[&str] = &[
     L2RangeByL1Height::table_name(),
     L2GenesisStateRoot::table_name(),
     StateDiffByBlockNumber::table_name(),
+    SequencerCommitmentByIndex::table_name(),
     PendingSequencerCommitment::table_name(),
     CommitmentsByNumber::table_name(),
     MempoolTxs::table_name(),
