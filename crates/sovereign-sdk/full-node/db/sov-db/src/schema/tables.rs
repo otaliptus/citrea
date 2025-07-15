@@ -60,20 +60,6 @@ pub const SEQUENCER_LEDGER_TABLES: &[&str] = &[
     MempoolTxs::table_name(),
     LastPrunedBlock::table_name(),
     // ########
-    // The following tables exist in the sequencer since they enable
-    // using the fullnode's backup as a sequencer database without having
-    // to remove these tables first as demonstrated by the
-    // `test_sequencer_crash_and_replace_full_node` test.
-    VerifiedBatchProofsBySlotNumber::table_name(),
-    ProverLastScannedSlot::table_name(),
-    SlotByHash::table_name(),
-    ShortHeaderProofBySlotHash::table_name(),
-    CommitmentMerkleRoots::table_name(),
-    SequencerCommitmentByIndex::table_name(),
-    L2StatusHeights::table_name(),
-    PendingSequencerCommitments::table_name(),
-    PendingProofs::table_name(),
-    // ########
     #[cfg(test)]
     TestTableOld::table_name(),
     #[cfg(test)]
@@ -81,7 +67,6 @@ pub const SEQUENCER_LEDGER_TABLES: &[&str] = &[
 ];
 
 /// A list of all tables used by FullNode LedgerDB
-/// Also includes tables of Sequencer LedgerDB so that it can be used as a sequencer if needed
 pub const FULL_NODE_LEDGER_TABLES: &[&str] = &[
     ExecutedMigrations::table_name(),
     SlotByHash::table_name(),
