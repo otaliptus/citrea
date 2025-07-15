@@ -1,9 +1,10 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::LazyLock;
+
 use metrics::{Counter, Histogram};
 use metrics_derive::Metrics;
-use std::sync::LazyLock;
 
 /// This defines the struct which encapsulates all metrics used for schema DB.
 ///

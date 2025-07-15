@@ -2,9 +2,10 @@
 //!
 //! This module defines metrics that track aspects of light client prover operation,
 //! including L1 block processing times and current L1 block number.
+use std::sync::LazyLock;
+
 use metrics::{Gauge, Histogram};
 use metrics_derive::Metrics;
-use std::sync::LazyLock;
 
 #[derive(Metrics)]
 #[metrics(scope = "light_client_prover")]

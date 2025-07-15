@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::OnceLock;
 
 use revm::context::result::{
     EVMError, FromStringError, HaltReason, InvalidTransaction, ResultAndState,
@@ -10,7 +11,6 @@ use revm::context::{
     TxEnv,
 };
 use revm::handler::instructions::{EthInstructions, InstructionProvider};
-use std::sync::OnceLock;
 // use revm::handler::register::{EvmHandler, HandleRegisterBox, HandleRegisters};
 use revm::handler::{
     EthFrame, EthPrecompiles, EvmTr, EvmTrError, Frame, FrameResult, Handler, MainnetHandler,

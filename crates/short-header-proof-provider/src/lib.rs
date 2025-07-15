@@ -3,10 +3,10 @@ mod native;
 mod zk;
 
 use std::ops::RangeInclusive;
+use std::sync::OnceLock;
 
 #[cfg(feature = "native")]
 pub use native::*;
-use std::sync::OnceLock;
 use thiserror::Error;
 pub use zk::*;
 

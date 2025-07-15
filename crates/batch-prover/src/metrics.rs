@@ -3,9 +3,10 @@
 //! This module defines metrics that track various aspects of batch prover operation,
 //! including block processing times and current block numbers.
 
+use std::sync::LazyLock;
+
 use metrics::{Gauge, Histogram};
 use metrics_derive::Metrics;
-use std::sync::LazyLock;
 
 /// Collection of metrics for monitoring batch prover performance and state
 #[derive(Metrics)]

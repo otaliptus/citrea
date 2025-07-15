@@ -1,6 +1,7 @@
+use std::sync::LazyLock;
+
 use metrics::{Counter, Gauge, Histogram};
 use metrics_derive::Metrics;
-use std::sync::LazyLock;
 
 /// Defines the metrics being collected for the sequencer
 #[derive(Metrics)]
