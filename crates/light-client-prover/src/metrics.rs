@@ -4,7 +4,7 @@
 //! including L1 block processing times and current L1 block number.
 use metrics::{Gauge, Histogram};
 use metrics_derive::Metrics;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[derive(Metrics)]
 #[metrics(scope = "light_client_prover")]
@@ -19,7 +19,7 @@ pub struct LightClientProverMetrics {
 }
 
 /// Light client metrics
-pub static LIGHT_CLIENT_METRICS: Lazy<LightClientProverMetrics> = Lazy::new(|| {
+pub static LIGHT_CLIENT_METRICS: LazyLock<LightClientProverMetrics> = LazyLock::new(|| {
     LightClientProverMetrics::describe();
     LightClientProverMetrics::default()
 });

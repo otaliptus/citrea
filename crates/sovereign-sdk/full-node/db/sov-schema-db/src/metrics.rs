@@ -3,7 +3,7 @@
 
 use metrics::{Counter, Histogram};
 use metrics_derive::Metrics;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 /// This defines the struct which encapsulates all metrics used for schema DB.
 ///
@@ -36,7 +36,7 @@ pub struct SchemaDbMetrics {
 }
 
 /// Schema DB metrics
-pub static SCHEMADB_METRICS: Lazy<SchemaDbMetrics> = Lazy::new(|| {
+pub static SCHEMADB_METRICS: LazyLock<SchemaDbMetrics> = LazyLock::new(|| {
     SchemaDbMetrics::describe();
     SchemaDbMetrics::default()
 });
