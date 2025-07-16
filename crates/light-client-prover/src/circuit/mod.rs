@@ -8,7 +8,6 @@ use accessors::{
     VerifiedStateTransitionForSequencerCommitmentIndexAccessor,
 };
 use borsh::BorshDeserialize;
-use citrea_primitives::network_to_dev_mode;
 use initial_values::LCP_JMT_GENESIS_ROOT;
 use sov_modules_api::da::BlockHeaderTrait;
 use sov_modules_api::{BlobReaderTrait, DaSpec, WorkingSet, Zkvm};
@@ -718,4 +717,10 @@ impl<S: Storage, DS: DaSpec, Z: Zkvm> Default for LightClientProofCircuit<S, DS,
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Allow dev mode usage for proof verification, only in testing or dev networks.
+/// So we return false for mainnet and true for all other networks.
+pub fn network_to_dev_mode(network: Network) -> bool {
+    !matches!(network, Network::Mainnet)
 }
