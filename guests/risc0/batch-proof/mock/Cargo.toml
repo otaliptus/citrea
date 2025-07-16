@@ -26,6 +26,7 @@ sov-rollup-interface = { path = "../../../../crates/sovereign-sdk/rollup-interfa
 sov-state = { path = "../../../../crates/sovereign-sdk/module-system/sov-state" }
 
 [features]
+# sys-getenv enabled for network selection here, only used in tests
 testing = ["citrea-primitives/testing", "risc0-zkvm-platform/sys-getenv"]
 
 [patch.crates-io]
