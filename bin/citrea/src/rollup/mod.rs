@@ -242,6 +242,7 @@ pub trait CitreaRollupBlueprint: RollupBlueprint {
     #[allow(clippy::too_many_arguments)]
     async fn create_full_node(
         &self,
+        network: Network,
         genesis_config: GenesisParams<Self>,
         rollup_config: FullNodeConfig<Self::DaConfig>,
         da_service: Arc<<Self as RollupBlueprint>::DaService>,
@@ -276,6 +277,7 @@ pub trait CitreaRollupBlueprint: RollupBlueprint {
         let code_commitments = self.get_batch_proof_code_commitments();
 
         citrea_fullnode::build_services(
+            network,
             runner_config,
             init_params,
             native_stf,

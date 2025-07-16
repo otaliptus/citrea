@@ -348,6 +348,7 @@ where
         _ => {
             let (mut l2_syncer, l1_block_handler, pruner_service, rpc_module) =
                 CitreaRollupBlueprint::create_full_node(
+                    network,
                     &rollup_blueprint,
                     genesis_config,
                     rollup_config.clone(),
