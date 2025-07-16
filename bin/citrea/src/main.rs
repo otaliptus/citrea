@@ -286,6 +286,7 @@ where
         NodeWithConfig::BatchProver(batch_prover_config) => {
             let (l2_syncer, l1_syncer, prover, rpc_module) =
                 CitreaRollupBlueprint::create_batch_prover(
+                    network,
                     &rollup_blueprint,
                     batch_prover_config,
                     genesis_config,

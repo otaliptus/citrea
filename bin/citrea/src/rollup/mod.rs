@@ -298,6 +298,7 @@ pub trait CitreaRollupBlueprint: RollupBlueprint {
     #[allow(clippy::type_complexity, clippy::too_many_arguments)]
     async fn create_batch_prover(
         &self,
+        network: Network,
         prover_config: BatchProverConfig,
         genesis_config: GenesisParams<Self>,
         rollup_config: FullNodeConfig<Self::DaConfig>,
@@ -344,6 +345,7 @@ pub trait CitreaRollupBlueprint: RollupBlueprint {
         let elfs = self.get_batch_proof_elfs();
 
         citrea_batch_prover::build_services(
+            network,
             prover_config,
             runner_config,
             init_params,
