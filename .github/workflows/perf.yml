@@ -2,7 +2,6 @@ name: Performance Comparison
 
 on:
   workflow_dispatch:
-
 env:
   CARGO_TERM_COLOR: always
   FOUNDRY_PROFILE: ci
@@ -12,7 +11,7 @@ env:
 
 jobs:
   performance-comparison:
-    runs-on: ubicloud-standard-16
+    runs-on: tenki-standard-autoscale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch latest nightly
