@@ -116,7 +116,7 @@ jobs:
 
   check:
     name: check
-    runs-on: ubicloud-standard-4
+    runs-on: tenki-standard-autoscale
     timeout-minutes: 60
     if: github.event.pull_request.draft == false
     steps:
@@ -150,7 +150,7 @@ jobs:
 
   udeps:
     name: udeps
-    runs-on: ubicloud-standard-8
+    runs-on: tenki-standard-autoscale
     timeout-minutes: 60
     if: github.event.pull_request.draft == false
     steps:
@@ -182,7 +182,7 @@ jobs:
           args: "--workspace --all-features --all-targets"
 
   deny:
-    runs-on: ubuntu-latest
+    runs-on: tenki-standard-autoscale
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
@@ -194,7 +194,7 @@ jobs:
   coverage:
     needs:
       - docker-setup
-    runs-on: ubicloud-standard-30
+    runs-on: tenki-standard-autoscale
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
@@ -248,7 +248,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   uniswap:
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     needs: build
     if: github.event.pull_request.draft == false
     steps:
@@ -290,7 +290,7 @@ jobs:
           fi
 
   web3_py:
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     needs: build
     if: github.event.pull_request.draft == false
     steps:
@@ -319,7 +319,7 @@ jobs:
           python test.py
 
   ethers_js:
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     needs: build
     if: github.event.pull_request.draft == false
     steps:
@@ -352,7 +352,7 @@ jobs:
     needs:
       - docker-setup
     name: nextest
-    runs-on: ubicloud-standard-30
+    runs-on: tenki-standard-autoscale
     timeout-minutes: 60
     if: github.event.pull_request.draft == false
     steps:
@@ -437,7 +437,7 @@ jobs:
     strategy:
       fail-fast: true
     name: Check Genesis Files
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
@@ -459,7 +459,7 @@ jobs:
         shell: bash
 
   docker-setup:
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     if: github.event.pull_request.draft == false
     steps:
       - name: Set up Docker Buildx
@@ -513,10 +513,9 @@ jobs:
         run: |
           codespell --skip="*.lock,./target,./crates/evm/ethereum-tests," -I="codespell_ignore.txt"
 
-
   proving-stats:
     name: Proving stats
-    runs-on: ubicloud-standard-2
+    runs-on: tenki-standard-autoscale
     needs: [build, docker-setup]
     if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'guest-code')
     steps:
@@ -553,7 +552,7 @@ jobs:
         run: |
           curl -L -o archive.zip "https://static.testnet.citrea.xyz/proving-stats-data.zip"
           unzip archive.zip -d proving-stats/
-      - name: Run tests on current branch 
+      - name: Run tests on current branch
         run: |
           chmod +x ./.github/scripts/run-proving-test.sh
           ./.github/scripts/run-proving-test.sh patch-stats.json
@@ -613,7 +612,7 @@ jobs:
         if: steps.restore-nightly.outputs.cache-hit != 'true' && steps.download-artifact.outputs.found_artifact != 'true'
         uses: ubicloud/rust-cache@v2
         with:
-            shared-key: build  
+            shared-key: build
       - name: Cache ethereum-tests
         if: steps.restore-nightly.outputs.cache-hit != 'true' && steps.download-artifact.outputs.found_artifact != 'true'
         uses: actions/cache@v4
