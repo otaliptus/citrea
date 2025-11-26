@@ -5,6 +5,7 @@
 ### Added
 - feat(prover): Store proving info by job id ([#3011](https://github.com/chainwayxyz/citrea/pull/3011))\
   `batchProver_getProvingJob*` endpoints now return information about the proving session, including cycle counts and request IDs (bonsai and boundless proofs).
+- perf: Remove validation from backup creation. Backup validation should now be handled by `backup_validate` RPC method. ([#3045](https://github.com/chainwayxyz/citrea/pull/3045))
 
 ### Changed
 - chore: renamed `BOUNDLESS_S3_NO_PRESIGNED` to `BOUNDLESS_S3_USE_PRESIGNED`. ([#3046](https://github.com/chainwayxyz/citrea/pull/3046))\
@@ -67,7 +68,7 @@ Node operators need to rescan L1:
 # use citrea-cli v0.7.2
 citrea-cli --rollback --node-type fullnode --db-path path/to/db --l2-target 9999999999 --l1-target 74247 --sequencer-commitment-index 0
 
-citrea-cli clear-pending --db-path path/to/dbs 
+citrea-cli clear-pending --db-path path/to/dbs
 ```
 
 
@@ -80,7 +81,7 @@ Node operators need to rescan L1:
 # use citrea-cli v0.7.1
 citrea-cli --rollback --node-type fullnode --db-path path/to/db --l2-target 9999999999 --l1-target 74247 --sequencer-commitment-index 0
 
-citrea-cli clear-pending --db-path path/to/dbs 
+citrea-cli clear-pending --db-path path/to/dbs
 ```
 
 ## v0.7.0 (2025-04-18)
